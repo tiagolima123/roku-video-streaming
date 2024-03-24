@@ -1,0 +1,284 @@
+
+sub init() 
+	findNodes()
+	settings()
+	loadData()
+
+	m.top.setFocus(true)
+	
+end sub
+
+
+
+
+
+'----------DATA-------
+sub saveData(section="default")
+	sec=CreateObject("roRegistrySection",section)
+
+	sec.Write("host", m.hostInput.text)
+	sec.Write("port", m.portInput.text)
+	sec.Write("path", m.pathInput.text)
+
+	sec.Flush() 'commit it
+end sub
+
+sub getData(sec, key, default) as Dynamic
+	if sec.Exists(key)
+		return sec.Read(key)
+	end if
+	return default
+end sub
+
+sub loadData(section="default")
+	sec=CreateObject("roRegistrySection", section)
+	
+	m.hostInput.text=getData(sec, "host", "")
+	m.portInput.text=getData(sec, "port", "")
+	m.pathInput.text=getData(sec, "path", "")
+end sub
+
+
+
+
+
+'----------MOVE CURSOR ANIMATION---------
+sub moveCursor(obj as Object)
+	toPosition = obj.translation[0]
+	toWidth = obj.width
+	m.translationAnimC.keyValue = [[m.cursor_position,350],[toPosition,350]]
+	m.widthAnimC.keyValue = [m.cursor_widh,toWidth]
+
+	m.cursor_position = toPosition
+	m.cursor_width = toWidth
+
+	m.myAnimC.control = "start"
+end sub
+
+
+
+sub setCursorFocus(focus as String)
+	if focus = "None"
+		moveCursor({translation: [-100,0], width: 0})
+	elseif focus = "host"
+		moveCursor(m.hostInput)
+	elseif focus = "port"
+		moveCursor(m.portInput)
+	elseif focus = "path"
+		moveCursor(m.pathInput)
+	elseif focus = "connect"
+		moveCursor(m.connect)
+	endif
+	m.cursor_focused = focus
+end sub
+
+
+sub moveCursorRight()
+	if m.cursor_focused = "None"
+		setCursorFocus("host")
+		showKeyboard()
+	elseif m.cursor_focused = "host"
+		setCursorFocus("port")
+	elseif m.cursor_focused = "port"
+		setCursorFocus("path")
+	elseif m.cursor_focused = "path"
+		setCursorFocus("connect")
+		hideKeyboard()
+	elseif m.cursor_focused = "connect"
+		setCursorFocus("None")
+	end if
+end sub
+
+sub moveCursorLeft()
+	if m.cursor_focused = "None"
+		setCursorFocus("connect")
+	elseif m.cursor_focused = "connect"
+		setCursorFocus("path")
+		showKeyboard()
+	elseif m.cursor_focused = "path"
+		setCursorFocus("port")
+	elseif m.cursor_focused = "port"
+		setCursorFocus("host")
+	elseif m.cursor_focused = "host"
+		setCursorFocus("None")	
+		hideKeyboard()
+	endif
+end sub
+
+
+
+
+
+
+'--------------KEYBOARD---------
+sub showKeyboard()
+	if m.keyboardState = "hide"
+		m.translationAnimK.keyValue = [[100,800],[100,450]]
+		m.keyboardState = "visible"
+		m.myAnimK.control="start"
+	end if
+end sub
+
+sub hideKeyboard()
+	if m.keyboardState = "visible"
+		m.translationAnimK.keyValue = [[100,450],[100,800]]
+		m.keyboardState = "hide"
+		m.myAnimK.control="start"
+	end if	
+end sub
+
+
+sub setKeyboardFocus()
+	if m.keyboardState = "visible"
+		if m.cursor_focused = "host"
+			m.keyboard_editing = m.hostInput
+
+		elseif m.cursor_focused = "port"
+			m.keyboard_editing = m.portInput
+		elseif m.cursor_focused = "path"
+			m.keyboard_editing = m.pathInput
+		end if
+		m.keyboard.setFocus(true)
+		m.cursor.opacity = 0.5
+
+		m.keyboard.text = m.keyboard_editing.text
+		m.keyboard_editing.active = true
+
+		m.keyboard.textEditBox.cursorPosition = len(m.keyboard.text)
+		m.keyboard_editing.cursorPosition = m.keyboard.textEditBox.cursorPosition
+
+	end if
+end sub
+
+sub removeCursorFocus()
+	if m.keyboardState = "visible"
+		m.keyboard_editing.active = false
+		m.keyboard.setFocus(false)
+		m.top.setFocus(true)
+		m.cursor.opacity = 1.0
+	end if
+	
+end sub
+
+sub changetext()
+	if m.keyboard_editing.text <> m.keyboard.text and m.keyboard_editing.active
+		m.keyboard_editing.text = m.keyboard.text
+	end if
+end sub
+
+sub onCursorPostionChanged()
+	m.keyboard_editing.cursorPosition = m.keyboard.textEditBox.cursorPosition
+end sub
+
+
+	
+
+
+'-------------FIND NODES--------------------
+sub findNodes()
+	m.video = m.top.findNode("video")
+	
+	m.myAnimC = m.top.findNode("myAnimC")
+	m.widthAnimC = m.top.findNode("widthAnimC")
+	m.translationAnimC = m.top.findNode("translationAnimC")
+
+
+	m.keyboard=m.top.findNode("keyboard")
+	m.myAnimK=m.top.findNode("myAnimK")
+	m.translationAnimK=m.top.findNode("translationAnimK")
+
+	m.hostInput = m.top.findNode("hostInput")
+	m.portInput = m.top.findNode("portInput")
+	m.pathInput = m.top.findNode("pathInput")
+	m.connect = m.top.findNode("connect")
+	m.cursor = m.top.findNode("cursor")
+
+end sub
+
+
+
+
+'-------------SETTINGS--------------
+sub settings()
+	m.server = "http://192.168.0.123:4567"
+	m.videoContent = createObject("RoSGNode", "ContentNode")
+	m.keyboardState = "hide"
+
+	m.cursor_position=-100
+	m.cursor_width=0
+	m.cursor_focused = "None"
+
+
+	m.keyboard.ObserveField("text", "changetext")	
+	m.keyboard.textEditBox.ObserveField("cursorPosition", "onCursorPostionChanged")
+
+end sub
+
+
+
+
+
+'------------CONNECT-----------
+sub connect()
+	if m.cursor_focused = "connect"
+		saveData()
+
+	end if
+
+end sub
+
+
+
+
+'--------------SET SUBTITLE AND VIDEO URL AND PLAY---------
+sub updatePlayMovie()
+	setSubtitle()
+	setVideo()
+
+	m.video.content = m.videoContent
+	m.video.setFocus(true)
+	m.video.control = "play"
+end sub
+
+sub setSubtitle()
+	m.videoContent.SubtitleConfig = {
+        	ShowSubtitle: 1,
+                TrackName: m.server+"/subtitle.srt"
+        }
+
+end sub
+
+sub setVideo()
+	m.videoContent.url = m.server+"/movie.mp4"
+	'm.videoContent.streamformat = "mp4"
+end sub
+
+
+
+
+
+
+
+
+function onKeyEvent(key as String, press as Boolean) as Boolean
+	if press then
+		print "pressed: "+key
+
+		if key = "left"
+			moveCursorLeft()
+		elseif key = "right"
+			moveCursorRight()
+		elseif key = "down"
+			setKeyboardFocus()
+		elseif key = "OK"
+			setKeyboardFocus()
+			connect()
+		elseif key = "up" or key = "back"
+			removeCursorFocus()
+		else
+			return false
+		end if
+		return true
+	end if	
+    	return false
+end function
