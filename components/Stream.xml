@@ -87,7 +87,7 @@
 			<Label
 				width="120"
 				height="50"
-				text="Subtitle"
+				text="Legenda"
 				color="0xFFFFFF"
 				translation="[80,300]"
 				horizAlign="left"
