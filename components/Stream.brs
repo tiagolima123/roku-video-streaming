@@ -7,6 +7,7 @@ sub init()
 	m.top.setFocus(true)
 	
 	
+	m.video.audioFormat = "aac"
 end sub
 
 
@@ -302,7 +303,7 @@ sub connect()
 		saveData()
 
 		url = "http://"
-		url += getText(m.hostInputS, "192.168.0.123")
+		url += getText(m.hostInput, "192.168.0.123")
 		url += ":"+getText(m.portInput, "4567")
 		url += "/"+getText(m.pathInput, "movie.mp4")
 
@@ -342,13 +343,17 @@ sub stopMovie()
 end sub
 
 sub setSubtitle(url)
-	m.videoContent.SubtitleTracks = [{ 
+	m.videoContent.SubtitleTracks = [
+	{ 
 		TrackName: url, 
 		Language:"eng", 
 		Description:"English" 
 	}]
-
 end sub
+
+
+
+
 
 sub setVideo(url)
 	m.videoContent.url = url
@@ -395,6 +400,10 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
 			stopMovie()
 			return true
 		end if
+
+		print (m.video.availableAudioTracks)
+
 	end if	
+
     	return false
 end function
