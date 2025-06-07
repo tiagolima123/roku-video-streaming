@@ -6,7 +6,6 @@ sub init()
 	
 	m.top.setFocus(true)
 	
-	
 	m.video.audioFormat = "aac"
 end sub
 
@@ -248,6 +247,10 @@ sub findNodes()
 	m.connect = m.top.findNode("connect")
 	m.cursor = m.top.findNode("cursor")
 
+	m.popupIndex = m.top.findNode("popupIndex")
+	m.popupTimer = m.top.findNode("popupTimer")
+
+	m.errorBox = m.top.findNode("errorBox")
 end sub
 
 
@@ -258,6 +261,11 @@ sub settings()
 	m.server = "http://192.168.0.123:4567"
 	m.videoContent = createObject("RoSGNode", "ContentNode")
 	m.keyboardState = "visible"
+
+
+	m.downloader = CreateObject("RoSGNode", "Downloader")
+	m.downloader.ObserveField("error", "onDownloadError")
+	m.downloader.ObserveField("list", "onDownloadCompleted")
 
 	m.cursor_position=[200,240]
 	m.cursor_width=300
@@ -282,10 +290,43 @@ sub settings()
 	m.input_nodes.addTail("connect")
 	m.input_nodes_index=1
 
+	m.list = []
+	m.listIndex = 0
+	m.listSize = 0
 
+	m.popupTimer.ObserveField("fire", "hidePopupIndex")
 end sub
 
 
+'-----------POPUP-------------
+sub showPopupIndex()
+	m.popupIndex.text = Str(m.listIndex+1)+"/"+Str(m.listSize)
+	m.popupIndex.visible = true
+	m.popupTimer.duration = 2
+	m.popupTimer.control = "start"
+
+end sub
+
+sub hidePopupIndex()
+	m.popupIndex.visible = false
+end sub
+
+'-----------DOWNLOAD-----------
+sub onDownloadError()
+	m.errorBox.error = m.downloader.error
+end sub
+
+
+sub onDownloadCompleted()
+	m.list = m.downloader.list
+	m.listIndex = 0
+	m.listSize = m.list.Count()
+	
+	if m.listSize <> 0
+		playCurrentIndex()
+	end if
+
+end sub
 
 
 
@@ -302,10 +343,10 @@ sub connect()
 	if m.cursor_focused = "connect"
 		saveData()
 
-		url = "http://"
-		url += getText(m.hostInput, "192.168.0.123")
-		url += ":"+getText(m.portInput, "4567")
-		url += "/"+getText(m.pathInput, "movie.mp4")
+		uri = "http://"
+		uri += getText(m.hostInput, "192.168.0.123")
+		uri += ":"+getText(m.portInput, "4567")
+		uri += "/"+getText(m.pathInput, "movie.mp4")
 
 		urlS = "http://"
 		urlS += getText(m.hostInputS, "192.168.0.123")
@@ -313,17 +354,60 @@ sub connect()
 		urlS += "/"+getText(m.pathInputS, "subtitle.srt")
 
 
+		m.downloader.error = ""
+		m.downloader.uri = uri
+		m.downloader.control = "run"
+		
 		setSubtitle(urlS)
-		setVideo(url)
-		playMovie()
 	end if
 
 end sub
 
 
 
+'------------GO TO-------------
+sub goPrev()
+	if m.listSize = 0
+		return
+	end if
+
+	if m.listIndex = 0
+		m.listIndex = m.listSize-1
+	else
+		m.listIndex = m.listIndex-1
+	end if
+
+	playCurrentIndex()
+end sub
+
+
+sub goNext()
+	if m.listSize = 0
+		return
+	end if
+
+	if m.listIndex = m.listSize-1
+		m.listIndex = 0
+	else
+		m.listIndex = m.listIndex+1
+	end if
+
+	playCurrentIndex()
+end sub
+
+
+
+
 
 '--------------SET SUBTITLE AND VIDEO URL AND PLAY---------
+sub playCurrentIndex()
+	url=m.list[m.listIndex]
+	m.videoContent.url = url
+	playMovie()
+	showPopupIndex()
+end sub
+
+
 sub playMovie()
 	m.video.visible = true
 	m.video.content = m.videoContent
@@ -340,6 +424,7 @@ sub stopMovie()
 	m.top.setFocus(true)
 	m.movie_focus = false
 	m.video.visible = false
+	m.listSize = 0
 end sub
 
 sub setSubtitle(url)
@@ -349,15 +434,6 @@ sub setSubtitle(url)
 		Language:"eng", 
 		Description:"English" 
 	}]
-end sub
-
-
-
-
-
-sub setVideo(url)
-	m.videoContent.url = url
-	'm.videoContent.streamformat = "mp4"
 end sub
 
 
@@ -396,14 +472,18 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
 	if press then
 		if not m.movie_focus
 			return handleInput(key)
+		elseif key = "channelup"
+			goNext()
+	  elseif key = "channeldown"
+			goPrev()
 		elseif key = "back"
 			stopMovie()
 			return true
 		end if
 
-		print (m.video.availableAudioTracks)
-
 	end if	
 
-    	return false
+  return false
 end function
+
+

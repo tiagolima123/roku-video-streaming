@@ -1,0 +1,96 @@
+
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ErrorBox" extends="Group"> 
+	<script type="text/brightscript" uri="pkg:/components/ErrorBox.brs"/>
+	<interface>
+		<field type="string" id="error" alias="errorText.text"/>
+
+	</interface>
+	<children>
+		<Rectangle
+			id="background1"
+			color="0x9D00FF"
+			width="0"
+			height="28"
+			translation="[10000,10000]">
+
+			<Rectangle
+				id="background2"
+				color="0x000000"
+				width="121"
+				height="24"
+				translation="[2,2]">
+				
+				<Label
+					id="errorText"
+					width="121"
+					height="24"
+					translation="[2,2]"
+					text="ERROR BOX"
+					color="0xFFFFFFFF"
+					ellipsizeOnBoundary="true"
+				/>
+			</Rectangle>
+		</Rectangle>
+
+		<SequentialAnimation id="errorAnimation">
+			<Animation
+				duration=".5"
+				easeFunction="piecewise" >
+			
+				<Vector2DFieldInterpolator 
+					id="errorAnimIn"
+        				key="[0.0, 1.0]"
+					fieldToInterp="background1.translation" />
+			</Animation>
+
+			<Animation
+				duration=".2"
+				easeFunction="inCubic" >
+
+				<Vector2DFieldInterpolator 
+					id="errorAnimInC"
+        				key="[0.0, 1.0]"
+					fieldToInterp="background1.translation" />
+
+				<FloatFieldInterpolator
+					id = "errorAnimPopupIn"
+					key="[0.0, 1.0]"
+					fieldToInterp="background1.width"   />
+			</Animation>
+
+			<Animation
+				duration="2."
+				easeFunction="linear" />
+			
+			<Animation
+				duration=".5"
+				easeFunction="outCubic" >
+
+				<Vector2DFieldInterpolator 
+					id="errorAnimOutC"
+        				key="[0.0, 1.0]"
+					fieldToInterp="background1.translation" />
+
+				<FloatFieldInterpolator
+					id = "errorAnimPopupOut"
+					key="[0.0, 1.0]"
+					fieldToInterp="background1.width"   />
+
+			</Animation>
+
+			<Animation
+				duration=".5"
+				easeFunction="piecewise" >
+				<Vector2DFieldInterpolator 
+					id="errorAnimOut"
+        				key="[0.0, 1.0]"
+					fieldToInterp="background1.translation" />
+			</Animation>
+			
+		</SequentialAnimation>
+
+
+	</children>
+</component>
+

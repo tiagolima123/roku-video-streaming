@@ -12,8 +12,6 @@
 			color="0x000000"
 			>
 
-
-
 			<Label
 				width="120"
 				height="50"
@@ -186,7 +184,6 @@
 					<Vector2DFieldInterpolator 
 						id="translationAnimC"
         					key="[0.0, 1.0]"
-				        	keyValue=""
 						fieldToInterp="cursor.translation" />
 				</Animation>
 
@@ -199,7 +196,6 @@
 					<FloatFieldInterpolator
 						id = "widthAnimC" 
 						key="[0.0, 1.0]"
-						keyValue="[]"
 						fieldToInterp="cursor.width" />
 				</Animation>
 
@@ -226,7 +222,6 @@
 				<Vector2DFieldInterpolator 
 					id="translationAnimK"
         				key="[0.0, 1.0]"
-				        keyValue=""
 					fieldToInterp="keyboard.translation" />
 			</Animation>
 
@@ -238,5 +233,20 @@
 		      	height="720" 
 			visible="false"
 			/>
+
+		<Label id="popupIndex"
+			width="200"
+			height="50"
+			visible="false"
+			translation="[20, 690]"
+			color="0xFC008D"
+			text="0/0"
+			/>
+
+		<Timer id="popupTimer"
+			repeat="false"
+			duration="2"/>
+
+		<ErrorBox id="errorBox"/>
 	</children>
 </component>
